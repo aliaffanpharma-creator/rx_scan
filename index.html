@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>RxScan — Prescription Analyzer</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f5f5f7;
+  --white:#ffffff;
+  --text:#1d1d1f;
+  --text2:#6e6e73;
+  --text3:#aeaeb2;
+  --border:#d2d2d7;
+  --border2:#e5e5ea;
+  --teal:#007aff;
+  --teal-light:#e8f1ff;
+  --green:#34c759;
+  --green-light:#edfaf1;
+  --amber:#ff9500;
+  --amber-light:#fff5e6;
+  --red:#ff3b30;
+  --red-light:#fff0ee;
+  --r:14px;
+  --r2:20px;
+  --shadow:0 2px 12px rgba(0,0,0,0.06);
+  --shadow2:0 8px 32px rgba(0,0,0,0.1);
+}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Inter',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ── NAV ── */
+nav{
+  background:rgba(255,255,255,0.85);
+  backdrop-filter:saturate(180%) blur(20px);
+  -webkit-backdrop-filter:saturate(180%) blur(20px);
+  border-bottom:1px solid var(--border2);
+  height:56px;
+  display:flex;align-items:center;
+  padding:0 24px;
+  position:sticky;top:0;z-index:100;
+}
+.nav-logo{display:flex;align-items:center;gap:10px}
+.nav-icon{
+  width:32px;height:32px;background:var(--teal);
+  border-radius:8px;display:flex;align-items:center;justify-content:center;
+  font-size:16px;
+}
+.nav-name{font-size:17px;font-weight:600;letter-spacing:-0.3px}
+.nav-sub{font-size:11px;color:var(--text2);margin-top:1px;letter-spacing:0.1px}
+.nav-badge{
+  margin-left:auto;font-size:11px;font-weight:500;
+  color:var(--text2);background:var(--bg);
+  border:1px solid var(--border2);padding:4px 10px;border-radius:20px;
+}
+
+/* ── PAGE ── */
+.page{max-width:680px;margin:0 auto;padding:40px 20px 80px}
+
+/* ── HERO ── */
+.hero{text-align:center;margin-bottom:36px}
+.hero h1{
+  font-size:34px;font-weight:700;letter-spacing:-0.8px;
+  line-height:1.15;color:var(--text);margin-bottom:10px;
+}
+.hero p{font-size:16px;color:var(--text2);font-weight:400;line-height:1.6}
+
+/* ── CARD ── */
+.card{
+  background:var(--white);
+  border-radius:var(--r2);
+  box-shadow:var(--shadow);
+  overflow:hidden;
+  margin-bottom:12px;
+}
+
+/* ── INPUT MODE ── */
+.mode-toggle{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:6px;padding:6px;
+  background:var(--bg);
+  border-radius:12px;
+  margin-bottom:20px;
+}
+.mode-btn{
+  padding:10px;border:none;background:transparent;
+  cursor:pointer;border-radius:9px;
+  font-family:'Inter',sans-serif;font-size:14px;font-weight:500;
+  color:var(--text2);transition:all 0.2s;
+  display:flex;align-items:center;justify-content:center;gap:7px;
+}
+.mode-btn.on{background:var(--white);color:var(--text);box-shadow:var(--shadow)}
+
+/* ── UPLOAD ── */
+.drop{
+  border:1.5px dashed var(--border);
+  border-radius:var(--r);padding:40px 20px;
+  text-align:center;cursor:pointer;
+  background:var(--bg);position:relative;
+  transition:all 0.2s;
+}
+.drop:hover,.drop.over{border-color:var(--teal);background:var(--teal-light)}
+.drop input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.drop-icon{font-size:32px;margin-bottom:10px}
+.drop h3{font-size:15px;font-weight:600;margin-bottom:4px}
+.drop p{font-size:13px;color:var(--text2)}
+.drop-fmts{display:flex;justify-content:center;gap:6px;margin-top:10px;flex-wrap:wrap}
+.fmt{font-size:11px;color:var(--text3);background:var(--white);border:1px solid var(--border2);padding:2px 8px;border-radius:6px;font-weight:500}
+
+.prev{display:none;border-radius:var(--r);overflow:hidden;position:relative;background:#f0f0f2;margin-bottom:0}
+.prev img{width:100%;max-height:240px;object-fit:contain;display:block}
+.prev-del{
+  position:absolute;top:8px;right:8px;
+  width:28px;height:28px;border-radius:50%;
+  background:rgba(0,0,0,0.5);border:none;
+  color:#fff;cursor:pointer;font-size:13px;
+  display:flex;align-items:center;justify-content:center;
+}
+
+/* ── TEXTAREA ── */
+textarea{
+  width:100%;min-height:180px;border:none;outline:none;
+  background:transparent;resize:none;
+  font-family:'Inter',sans-serif;font-size:15px;
+  color:var(--text);line-height:1.7;
+}
+textarea::placeholder{color:var(--text3)}
+
+/* ── SECTION LABEL ── */
+.sec-label{
+  font-size:12px;font-weight:600;color:var(--text2);
+  text-transform:uppercase;letter-spacing:0.06em;
+  padding:16px 20px 0;
+}
+
+/* ── PATIENT FIELDS ── */
+.pt-toggle{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 20px;cursor:pointer;
+}
+.pt-toggle-left{display:flex;align-items:center;gap:10px}
+.pt-toggle-icon{
+  width:30px;height:30px;border-radius:8px;
+  background:var(--bg);border:1px solid var(--border2);
+  display:flex;align-items:center;justify-content:center;font-size:14px;
+}
+.pt-toggle h4{font-size:15px;font-weight:500}
+.pt-toggle p{font-size:13px;color:var(--text2)}
+.pt-chevron{font-size:12px;color:var(--text3);transition:transform 0.2s}
+.pt-chevron.open{transform:rotate(180deg)}
+
+.pt-body{display:none;padding:0 20px 20px}
+.pt-body.open{display:block}
+.fg{display:grid;gap:10px;margin-bottom:10px}
+.fg-3{grid-template-columns:1fr 1fr 1fr}
+.fg-2{grid-template-columns:1fr 1fr}
+@media(max-width:500px){.fg-3,.fg-2{grid-template-columns:1fr 1fr}}
+.field label{display:block;font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px}
+.field input,.field select,.field textarea.small{
+  width:100%;background:var(--bg);border:1px solid var(--border2);
+  border-radius:10px;padding:10px 12px;
+  font-family:'Inter',sans-serif;font-size:14px;color:var(--text);
+  transition:border-color 0.2s;
+}
+.field input:focus,.field select:focus,.field textarea.small:focus{
+  outline:none;border-color:var(--teal);
+  box-shadow:0 0 0 3px rgba(0,122,255,0.1);
+}
+.field input::placeholder{color:var(--text3)}
+.field select option{background:var(--white)}
+.field textarea.small{min-height:60px;resize:none}
+.divider{height:1px;background:var(--border2);margin:0 20px}
+
+/* ── ANALYZE BUTTON ── */
+.analyze-btn{
+  width:100%;padding:16px;
+  background:var(--teal);color:#fff;border:none;
+  border-radius:var(--r2);
+  font-family:'Inter',sans-serif;font-size:16px;font-weight:600;
+  cursor:pointer;transition:all 0.2s;
+  letter-spacing:-0.1px;
+}
+.analyze-btn:hover:not(:disabled){
+  background:#0066d6;
+  box-shadow:0 4px 16px rgba(0,122,255,0.35);
+  transform:translateY(-1px);
+}
+.analyze-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none}
+
+/* ── ERROR ── */
+.err{
+  display:none;
+  background:var(--red-light);border:1px solid rgba(255,59,48,0.2);
+  border-radius:10px;padding:12px 14px;
+  font-size:13px;color:var(--red);font-weight:500;margin-top:10px;
+}
+.err.on{display:block}
+
+/* ── LOADING ── */
+#loader{display:none;margin-top:12px}
+#loader.on{display:block}
+.loader-card{
+  background:var(--white);border-radius:var(--r2);
+  padding:40px 24px;text-align:center;box-shadow:var(--shadow);
+}
+.spinner{
+  width:44px;height:44px;margin:0 auto 20px;
+  border:3px solid var(--border2);
+  border-top-color:var(--teal);
+  border-radius:50%;
+  animation:spin 0.8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loader-card h3{font-size:18px;font-weight:600;margin-bottom:6px;letter-spacing:-0.3px}
+.loader-card p{font-size:14px;color:var(--text2)}
+.load-steps{margin-top:20px;display:flex;flex-direction:column;gap:6px;max-width:280px;margin-left:auto;margin-right:auto}
+.lstep{
+  font-size:13px;color:var(--text2);
+  display:flex;align-items:center;gap:8px;
+  background:var(--bg);border-radius:8px;padding:8px 12px;
+  opacity:0;animation:fadeUp 0.4s ease forwards;
+}
+.lstep.s1{animation-delay:0.2s}.lstep.s2{animation-delay:1.0s}
+.lstep.s3{animation-delay:2.1s}.lstep.s4{animation-delay:3.2s}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── REPORT ── */
+#report{display:none;margin-top:12px}
+#report.on{display:block;animation:fadeUp 0.5s ease both}
+
+/* VERDICT HEADER */
+.verdict{
+  border-radius:var(--r2);padding:24px;margin-bottom:12px;
+  display:flex;align-items:flex-start;gap:16px;
+}
+.verdict.safe{background:var(--green-light);border:1px solid rgba(52,199,89,0.2)}
+.verdict.warning{background:var(--amber-light);border:1px solid rgba(255,149,0,0.2)}
+.verdict.danger{background:var(--red-light);border:1px solid rgba(255,59,48,0.2)}
+.verdict-icon{font-size:40px;line-height:1;flex-shrink:0}
+.verdict-body{flex:1}
+.verdict-title{font-size:20px;font-weight:700;letter-spacing:-0.4px;margin-bottom:4px}
+.verdict.safe .verdict-title{color:#1d7a3e}
+.verdict.warning .verdict-title{color:#a05c00}
+.verdict.danger .verdict-title{color:#c0001a}
+.verdict-sub{font-size:14px;line-height:1.5}
+.verdict.safe .verdict-sub{color:#2d8f50}
+.verdict.warning .verdict-sub{color:#b36a00}
+.verdict.danger .verdict-sub{color:#d0001e}
+.verdict-score{
+  flex-shrink:0;text-align:center;
+  width:52px;height:52px;border-radius:50%;
+  border:2px solid;display:flex;align-items:center;
+  justify-content:center;flex-direction:column;
+}
+.verdict.safe .verdict-score{border-color:var(--green);color:var(--green)}
+.verdict.warning .verdict-score{border-color:var(--amber);color:var(--amber)}
+.verdict.danger .verdict-score{border-color:var(--red);color:var(--red)}
+.score-n{font-size:18px;font-weight:700;line-height:1}
+.score-d{font-size:9px;font-weight:600;color:var(--text3)}
+
+/* REPORT SECTION */
+.rsec{background:var(--white);border-radius:var(--r2);box-shadow:var(--shadow);margin-bottom:12px;overflow:hidden}
+.rsec-head{
+  padding:18px 20px;display:flex;align-items:center;gap:12px;
+  border-bottom:1px solid var(--border2);
+}
+.rsec-ico{
+  width:36px;height:36px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;font-size:18px;
+  flex-shrink:0;
+}
+.ico-blue{background:#e8f1ff}
+.ico-green{background:var(--green-light)}
+.ico-amber{background:var(--amber-light)}
+.ico-red{background:var(--red-light)}
+.ico-purple{background:#f2eeff}
+.ico-teal{background:#e6f9f5}
+.rsec-ttl{font-size:15px;font-weight:600;letter-spacing:-0.2px}
+.rsec-sub{font-size:12px;color:var(--text2);margin-top:1px}
+.rsec-tag{
+  margin-left:auto;font-size:11px;font-weight:600;
+  padding:4px 10px;border-radius:20px;white-space:nowrap;
+}
+.tag-ok{background:var(--green-light);color:#1d7a3e}
+.tag-warn{background:var(--amber-light);color:#a05c00}
+.tag-err{background:var(--red-light);color:#c0001a}
+.tag-na{background:var(--bg);color:var(--text2)}
+.tag-info{background:var(--teal-light);color:#0050a0}
+.rsec-body{padding:18px 20px}
+
+/* DRUG PILLS */
+.drug-row{display:flex;flex-wrap:wrap;gap:7px;padding:16px 20px}
+.drug-pill{
+  display:flex;align-items:center;gap:6px;
+  background:var(--bg);border:1px solid var(--border2);
+  border-radius:20px;padding:6px 12px;font-size:13px;font-weight:500;
+}
+.dpill-dot{width:7px;height:7px;background:var(--teal);border-radius:50%;flex-shrink:0}
+.dpill-freq{font-size:11px;color:var(--text2);font-weight:400}
+
+/* TEXT CONTENT */
+.rtext{font-size:14px;color:var(--text);line-height:1.7}
+.rtext p{margin-bottom:8px}
+.rtext p:last-child{margin-bottom:0}
+.rtext ul{padding-left:16px}
+.rtext li{margin-bottom:5px}
+.rtext strong{font-weight:600}
+.hint{font-size:12px;color:var(--text2);margin-top:6px;font-style:italic}
+
+/* SCHEDULE GRID */
+.sched-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+@media(max-width:440px){.sched-grid{grid-template-columns:1fr 1fr}}
+.slot{background:var(--bg);border-radius:var(--r);padding:14px}
+.slot-ico{font-size:20px;margin-bottom:6px}
+.slot-name{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:7px}
+.slot-drugs{display:flex;flex-direction:column;gap:4px}
+.slot-d{font-size:12px;font-weight:500;background:var(--white);border:1px solid var(--border2);padding:4px 8px;border-radius:6px;color:var(--text)}
+.slot-none{font-size:12px;color:var(--text3);font-style:italic}
+.food-tip{
+  margin-top:8px;background:var(--teal-light);
+  border-radius:8px;padding:9px 12px;
+  font-size:12px;color:#0050a0;line-height:1.5;
+}
+
+/* SE ROW */
+.se-item{padding:12px 20px;border-bottom:1px solid var(--border2);display:flex;align-items:flex-start;gap:12px}
+.se-item:last-child{border-bottom:none}
+.se-drug-name{font-size:13px;font-weight:600;min-width:120px;flex-shrink:0;padding-top:2px}
+.se-pills{display:flex;flex-wrap:wrap;gap:5px}
+.se-pill{font-size:11px;background:var(--amber-light);color:#a05c00;border:1px solid rgba(255,149,0,0.15);padding:3px 9px;border-radius:10px;font-weight:500}
+
+/* SHARE SECTION */
+.share-card{background:var(--white);border-radius:var(--r2);box-shadow:var(--shadow);margin-bottom:12px;overflow:hidden}
+.share-head{padding:18px 20px;border-bottom:1px solid var(--border2)}
+.share-head h3{font-size:15px;font-weight:600;margin-bottom:2px;letter-spacing:-0.2px}
+.share-head p{font-size:13px;color:var(--text2)}
+.share-btns{padding:16px 20px;display:flex;flex-wrap:wrap;gap:8px}
+.sbtn{
+  display:flex;align-items:center;gap:7px;
+  padding:10px 16px;border-radius:var(--r);border:1px solid var(--border2);
+  background:var(--white);cursor:pointer;font-family:'Inter',sans-serif;
+  font-size:13px;font-weight:500;color:var(--text);transition:all 0.15s;
+}
+.sbtn:hover{border-color:var(--text);background:var(--bg)}
+.sbtn-ico{font-size:16px}
+.sbtn.copy-btn.copied{background:var(--green-light);border-color:var(--green);color:var(--green)}
+
+/* CHAT CARD */
+.chat-card{background:var(--white);border-radius:var(--r2);box-shadow:var(--shadow);margin-bottom:12px;overflow:hidden}
+.chat-head{padding:18px 20px;border-bottom:1px solid var(--border2);display:flex;align-items:center;gap:10px}
+.chat-head h3{font-size:15px;font-weight:600;flex:1;letter-spacing:-0.2px}
+.chat-online{font-size:11px;font-weight:500;color:var(--green);display:flex;align-items:center;gap:5px}
+.chat-online::before{content:'';width:6px;height:6px;background:var(--green);border-radius:50%;flex-shrink:0}
+.chat-msgs{padding:14px 16px;min-height:72px;max-height:260px;overflow-y:auto;display:flex;flex-direction:column;gap:8px}
+.bubble{max-width:80%;padding:10px 14px;border-radius:14px;font-size:14px;line-height:1.55;font-weight:400}
+.bubble.bot{background:var(--bg);color:var(--text);align-self:flex-start;border-bottom-left-radius:4px}
+.bubble.usr{background:var(--teal);color:#fff;align-self:flex-end;border-bottom-right-radius:4px}
+.chat-input-row{display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--border2);background:var(--bg)}
+.chat-input{
+  flex:1;background:var(--white);border:1px solid var(--border2);
+  border-radius:10px;padding:10px 14px;
+  font-family:'Inter',sans-serif;font-size:14px;color:var(--text);
+  transition:border-color 0.2s;
+}
+.chat-input:focus{outline:none;border-color:var(--teal)}
+.chat-input::placeholder{color:var(--text3)}
+.chat-send{
+  padding:10px 16px;background:var(--teal);color:#fff;
+  border:none;border-radius:10px;cursor:pointer;
+  font-family:'Inter',sans-serif;font-size:14px;font-weight:600;
+  transition:background 0.15s;
+}
+.chat-send:hover:not(:disabled){background:#0066d6}
+.chat-send:disabled{opacity:0.4;cursor:not-allowed}
+.typing-ind{
+  display:flex;gap:4px;align-items:center;
+  padding:10px 14px;background:var(--bg);border-radius:14px;
+  align-self:flex-start;border-bottom-left-radius:4px;
+}
+.typing-ind span{
+  width:7px;height:7px;background:var(--text3);border-radius:50%;
+  animation:bounce 1.2s infinite;
+}
+.typing-ind span:nth-child(2){animation-delay:.2s}
+.typing-ind span:nth-child(3){animation-delay:.4s}
+@keyframes bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-7px)}}
+
+/* RESET */
+.reset-btn{
+  width:100%;padding:14px;background:transparent;
+  border:1.5px solid var(--border);border-radius:var(--r2);
+  font-family:'Inter',sans-serif;font-size:14px;font-weight:500;
+  color:var(--text2);cursor:pointer;transition:all 0.2s;
+}
+.reset-btn:hover{border-color:var(--text);color:var(--text)}
+
+/* DISCLAIMER */
+.disclaimer{
+  text-align:center;font-size:12px;color:var(--text3);
+  line-height:1.6;padding:0 20px;margin-top:12px;
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">
+    <div class="nav-icon">💊</div>
+    <div>
+      <div class="nav-name">RxScan</div>
+    </div>
+  </div>
+  <div class="nav-badge">🇵🇰 WHO · FDA · PNF</div>
+</nav>
+
+<div class="page">
+
+  <!-- HERO -->
+  <div class="hero">
+    <h1>Is your prescription<br>safe to take?</h1>
+    <p>Upload a photo or describe it — we'll check everything and explain it simply.</p>
+  </div>
+
+  <!-- INPUT CARD -->
+  <div class="card" id="inputCard" style="padding:20px">
+
+    <!-- MODE TOGGLE -->
+    <div class="mode-toggle">
+      <button class="mode-btn on" id="modeUpload" onclick="switchMode('upload')">📷  Upload Photo</button>
+      <button class="mode-btn" id="modeText" onclick="switchMode('text')">✏️  Type It Out</button>
+    </div>
+
+    <!-- UPLOAD -->
+    <div id="uploadPane">
+      <div class="prev" id="prevBox">
+        <img id="prevImg" src="" alt=""/>
+        <button class="prev-del" onclick="removeImg()">✕</button>
+      </div>
+      <div class="drop" id="dropzone">
+        <input type="file" id="fileInput" accept="image/*" onchange="onFile(event)"/>
+        <div class="drop-icon">🧾</div>
+        <h3>Drop your prescription here</h3>
+        <p>or click to choose a photo</p>
+        <div class="drop-fmts">
+          <span class="fmt">JPG</span><span class="fmt">PNG</span><span class="fmt">HEIC</span><span class="fmt">WEBP</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- TEXT -->
+    <div id="textPane" style="display:none">
+      <textarea id="rxText" rows="7" placeholder="Paste or type the prescription here...
+
+Example:
+Patient: Sara, 34F
+• Metformin 500mg — twice daily after meals
+• Amlodipine 5mg — once daily
+• Aspirin 75mg — once daily
+• Amoxicillin 500mg — 3 times daily × 7 days"></textarea>
+    </div>
+
+    <div style="height:16px"></div>
+
+    <!-- PATIENT DETAILS TOGGLE -->
+    <div style="border:1px solid var(--border2);border-radius:var(--r);overflow:hidden;margin-bottom:16px">
+      <div class="pt-toggle" onclick="togglePt()">
+        <div class="pt-toggle-left">
+          <div class="pt-toggle-icon">👤</div>
+          <div>
+            <h4>Patient Details</h4>
+            <p>Add age, conditions, allergies for better results</p>
+          </div>
+        </div>
+        <span class="pt-chevron" id="ptChevron">▾</span>
+      </div>
+      <div class="pt-body" id="ptBody">
+        <div class="fg fg-3" style="margin-bottom:10px">
+          <div class="field"><label>Age</label><input type="number" id="age" placeholder="e.g. 45" min="0" max="120"/></div>
+          <div class="field"><label>Weight (kg)</label><input type="number" id="weight" placeholder="e.g. 70"/></div>
+          <div class="field"><label>Sex</label>
+            <select id="sex"><option value="">—</option><option>Male</option><option>Female</option></select>
+          </div>
+        </div>
+        <div class="fg fg-2" style="margin-bottom:10px">
+          <div class="field"><label>Kidney Function</label>
+            <select id="kidney"><option value="">Unknown</option><option value="normal">Normal (&gt;60 eGFR)</option><option value="mild">Mild issue (30–60)</option><option value="moderate">Moderate (15–30)</option><option value="severe">Severe (&lt;15)</option><option value="dialysis">On Dialysis</option></select>
+          </div>
+          <div class="field"><label>Liver Function</label>
+            <select id="liver"><option value="">Unknown</option><option value="normal">Normal</option><option value="mild">Mild issue</option><option value="moderate">Moderate</option><option value="severe">Severe</option></select>
+          </div>
+        </div>
+        <div class="fg fg-2" style="margin-bottom:10px">
+          <div class="field"><label>Pregnancy</label>
+            <select id="preg"><option value="">Not applicable</option><option value="1st">1st trimester</option><option value="2nd">2nd trimester</option><option value="3rd">3rd trimester</option><option value="bf">Breastfeeding</option></select>
+          </div>
+          <div class="field"><label>Patient Type</label>
+            <select id="ptype"><option value="adult">Adult</option><option value="child">Child</option><option value="elderly">Elderly (65+)</option></select>
+          </div>
+        </div>
+        <div class="field" style="margin-bottom:10px">
+          <label>Known Medical Conditions</label>
+          <input type="text" id="conditions" placeholder="e.g. Diabetes, Hypertension, Asthma"/>
+        </div>
+        <div class="field">
+          <label>Drug Allergies</label>
+          <input type="text" id="allergies" placeholder="e.g. Penicillin, Aspirin, NSAIDs"/>
+        </div>
+      </div>
+    </div>
+
+    <div class="err" id="errMsg"></div>
+    <button class="analyze-btn" id="analyzeBtn" onclick="analyze()">Analyze Prescription</button>
+  </div>
+
+  <!-- LOADING -->
+  <div id="loader">
+    <div class="loader-card">
+      <div class="spinner"></div>
+      <h3>Analyzing your prescription…</h3>
+      <p>Checking against WHO, FDA & Pakistan National Formulary</p>
+      <div class="load-steps">
+        <div class="lstep s1">📖 Reading medications & doses</div>
+        <div class="lstep s2">⚡ Checking drug interactions</div>
+        <div class="lstep s3">🔬 Validating safety & adjustments</div>
+        <div class="lstep s4">📋 Preparing your report</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- REPORT -->
+  <div id="report">
+
+    <!-- VERDICT -->
+    <div id="verdictBox" class="verdict safe">
+      <div class="verdict-icon" id="vIcon">✅</div>
+      <div class="verdict-body">
+        <div class="verdict-title" id="vTitle">Prescription Looks Safe</div>
+        <div class="verdict-sub" id="vSub">No major issues found.</div>
+      </div>
+      <div class="verdict-score" id="vScore">
+        <div class="score-n" id="vScoreN">9</div>
+        <div class="score-d">/ 10</div>
+      </div>
+    </div>
+
+    <!-- MEDICATIONS FOUND -->
+    <div class="rsec">
+      <div class="rsec-head">
+        <div class="rsec-ico ico-blue">💊</div>
+        <div>
+          <div class="rsec-ttl">Medications Found</div>
+          <div class="rsec-sub" id="drugCount">0 medications detected</div>
+        </div>
+      </div>
+      <div class="drug-row" id="drugRow"></div>
+    </div>
+
+    <!-- SAFETY SUMMARY -->
+    <div class="rsec">
+      <div class="rsec-head">
+        <div class="rsec-ico ico-teal">📋</div>
+        <div>
+          <div class="rsec-ttl">What This Prescription Is For</div>
+          <div class="rsec-sub">Plain-language summary</div>
+        </div>
+      </div>
+      <div class="rsec-body">
+        <div class="rtext" id="summaryText"></div>
+      </div>
+    </div>
+
+    <!-- DRUG INTERACTIONS -->
+    <div class="rsec" id="secInteractions">
+      <div class="rsec-head">
+        <div class="rsec-ico ico-red">⚡</div>
+        <div>
+          <div class="rsec-ttl">Drug Interactions</div>
+          <div class="rsec-sub">Can these medicines be taken together?</div>
+        </div>
+        <span class="rsec-tag tag-ok" id="tagInteractions">✓ Safe</span>
+      </div>
+      <div class="rsec-body">
+        <div class="rtext" id="textInteractions"></div>
+      </div>
+    </div>
+
+    <!-- DOSES -->
+    <div class="rsec" id="secDoses">
+      <div class="rsec-head">
+        <div class="rsec-ico ico-purple">⚖️</div>
+        <div>
+          <div class="rsec-ttl">Dose Check</div>
+          <div class="rsec-sub">Are the amounts correct?</div>
+        </div>
+        <span class="rsec-tag tag-ok" id="tagDoses">✓ Correct</span>
+      </div>
+      <div class="rsec-body">
+        <div class="rtext" id="textDoses"></div>
+      </div>
+    </div>
+
+    <!-- CONTRAINDICATIONS -->
+    <div class="rsec" id="secContra">
+      <div class="rsec-head">
+        <div class="rsec-ico ico-amber">🚫</div>
+        <div>
+          <div class="rsec-ttl">Contraindications</div>
+          <div class="rsec-sub">Any reasons NOT to take these medicines?</div>
+        </div>
+        <span class="rsec-tag tag-ok" id="tagContra">✓ None Found</span>
+      </div>
+      <div class="rsec-body">
+        <div class="rtext" id="textContra"></div>
+      </div>
+    </div>
+
+    <!-- KIDNEY & LIVER -->
+    <div class="rsec" id="secOrgan">
+      <div class="rsec-head">
+        <div class="rsec-ico ico-blue">🫘</div>
+        <div>
+          <div class="rsec-ttl">Kidney & Liver Safety</div>
+          <div class="rsec-sub">Any organ-specific dose adjustments?</div>
+        </div>
+        <span class="rsec-tag tag-na" id="tagOrgan">Not Checked</span>
+      </div>
+      <div class="rsec-body">
+        <div class="rtext" id="textOrgan"></div>
+      </div>
+    </div>
+
+    <!-- PREGNANCY -->
+    <div class="rsec" id="secPreg">
+      <div class="rsec-head">
+        <div class="rsec-ico ico-teal">🤰</div>
+        <div>
+          <div class="rsec-ttl">Pregnancy & Breastfeeding</div>
+          <div class="rsec-sub">Are these medicines safe in pregnancy?</div>
+        </div>
+        <span class="rsec-tag tag-na" id="tagPreg">Not Applicable</span>
+      </div>
+      <div class="rsec-body">
+        <div class="rtext" id="textPreg"></div>
+      </div>
+    </div>
+
+    <!-- SCHEDULE -->
+    <div class="rsec" id="secSched">
+      <div class="rsec-head">
+        <div class="rsec-ico ico-green">📅</div>
+        <div>
+          <div class="rsec-ttl">When to Take Each Medicine</div>
+          <div class="rsec-sub">Your daily medication schedule</div>
+        </div>
+      </div>
+      <div class="rsec-body" id="schedBody"></div>
+    </div>
+
+    <!-- SIDE EFFECTS -->
+    <div class="rsec">
+      <div class="rsec-head">
+        <div class="rsec-ico ico-amber">⚠️</div>
+        <div>
+          <div class="rsec-ttl">Side Effects to Watch For</div>
+          <div class="rsec-sub">Common things you might feel</div>
+        </div>
+      </div>
+      <div id="seBody"></div>
+    </div>
+
+    <!-- WHAT TO DO -->
+    <div class="rsec">
+      <div class="rsec-head">
+        <div class="rsec-ico ico-green">💬</div>
+        <div>
+          <div class="rsec-ttl">Your Pharmacist's Advice</div>
+          <div class="rsec-sub">What you should know & do</div>
+        </div>
+      </div>
+      <div class="rsec-body">
+        <div class="rtext" id="adviceText"></div>
+      </div>
+    </div>
+
+    <!-- SOURCES -->
+    <div class="rsec">
+      <div class="rsec-head">
+        <div class="rsec-ico ico-blue">🔍</div>
+        <div>
+          <div class="rsec-ttl">How We Checked This</div>
+          <div class="rsec-sub">Databases used in this analysis</div>
+        </div>
+      </div>
+      <div class="rsec-body">
+        <div class="rtext">
+          <p>This prescription was checked against five globally trusted pharmacological references:</p>
+          <p><strong>🌍 WHO Essential Medicines List 2023</strong> — global standard for safe, effective drugs.</p>
+          <p><strong>🇵🇰 Pakistan National Formulary (PNF)</strong> — official reference for medicines available in Pakistan.</p>
+          <p><strong>🇺🇸 FDA Drug Safety Database</strong> — US drug safety & interaction data.</p>
+          <p><strong>🇬🇧 British National Formulary (BNF)</strong> — clinical drug reference used worldwide.</p>
+          <p><strong>📚 Stockley's Drug Interactions</strong> — the gold standard for interaction checking.</p>
+          <p class="hint">We don't show external links to protect your privacy, but these are the real sources behind every result.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SHARE -->
+    <div class="share-card">
+      <div class="share-head">
+        <h3>Share This Report</h3>
+        <p>Send to your doctor, family, or save for yourself</p>
+      </div>
+      <div class="share-btns">
+        <button class="sbtn copy-btn" id="copyBtn" onclick="copyReport()"><span class="sbtn-ico">📋</span> Copy Text</button>
+        <button class="sbtn" onclick="shareWhatsApp()"><span class="sbtn-ico">💬</span> WhatsApp</button>
+        <button class="sbtn" onclick="shareMail()"><span class="sbtn-ico">✉️</span> Email</button>
+      </div>
+    </div>
+
+    <!-- CHAT -->
+    <div class="chat-card">
+      <div class="chat-head">
+        <div style="font-size:20px">💊</div>
+        <h3>Ask a Question</h3>
+        <div class="chat-online">Online</div>
+      </div>
+      <div class="chat-msgs" id="chatMsgs">
+        <div class="bubble bot">Hi! I've analyzed your prescription. Ask me anything — missed doses, food timings, side effects, or anything else. 😊</div>
+      </div>
+      <div class="chat-input-row">
+        <input class="chat-input" id="chatIn" placeholder="e.g. Can I take these with food?" onkeydown="if(event.key==='Enter')sendChat()"/>
+        <button class="chat-send" id="chatBtn" onclick="sendChat()">Send</button>
+      </div>
+    </div>
+
+    <!-- DISCLAIMER -->
+    <div class="disclaimer">
+      ⚠️ RxScan is an educational AI tool — not a substitute for a real pharmacist or doctor. Always confirm with your healthcare provider. Emergency: <strong>1122</strong>
+    </div>
+
+    <div style="height:12px"></div>
+    <button class="reset-btn" onclick="resetAll()">← Analyze Another Prescription</button>
+  </div>
+
+</div>
+
+<script>
+// ── STATE ──
+let b64=null, mime=null, lastR=null, lastDrugs='';
+const $=id=>document.getElementById(id);
+
+// ── MODE SWITCH ──
+function switchMode(m){
+  $('modeUpload').classList.toggle('on',m==='upload');
+  $('modeText').classList.toggle('on',m==='text');
+  $('uploadPane').style.display=m==='upload'?'block':'none';
+  $('textPane').style.display=m==='text'?'block':'none';
+}
+
+// ── PATIENT DETAILS ──
+function togglePt(){
+  const b=$('ptBody'), c=$('ptChevron');
+  const open=b.classList.contains('open');
+  b.classList.toggle('open',!open);
+  c.classList.toggle('open',!open);
+}
+
+// ── FILE ──
+function onFile(e){ const f=e.target.files[0]; if(f) loadFile(f) }
+function loadFile(f){
+  const r=new FileReader();
+  r.onload=e=>{
+    const d=e.target.result;
+    b64=d.split(',')[1]; mime=f.type||'image/jpeg';
+    $('prevImg').src=d;
+    $('prevBox').style.display='block';
+    $('dropzone').style.display='none';
+  };
+  r.readAsDataURL(f);
+}
+function removeImg(){
+  b64=null;mime=null;
+  $('prevImg').src='';
+  $('prevBox').style.display='none';
+  $('dropzone').style.display='block';
+  $('fileInput').value='';
+}
+const dz=$('dropzone');
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('over')});
+dz.addEventListener('dragleave',()=>dz.classList.remove('over'));
+dz.addEventListener('drop',e=>{
+  e.preventDefault();dz.classList.remove('over');
+  const f=e.dataTransfer.files[0];
+  if(f&&f.type.startsWith('image/'))loadFile(f);
+});
+
+// ── GATHER CONTEXT ──
+function getCtx(){
+  return[
+    $('age').value?'Age: '+$('age').value:'',
+    $('weight').value?'Weight: '+$('weight').value+'kg':'',
+    $('sex').value?'Sex: '+$('sex').value:'',
+    $('ptype').value?'Type: '+$('ptype').value:'',
+    $('kidney').value?'Kidney: '+$('kidney').value:'',
+    $('liver').value?'Liver: '+$('liver').value:'',
+    $('preg').value?'Pregnancy: '+$('preg').value:'',
+    $('conditions').value?'Conditions: '+$('conditions').value:'',
+    $('allergies').value?'Allergies: '+$('allergies').value:''
+  ].filter(Boolean).join(' | ');
+}
+
+// ── SYSTEM PROMPTS ──
+const SYS1=`You are RxScan, a pharmacist AI for Pakistan. Databases: WHO EML 2023, Pakistan National Formulary (PNF), FDA, BNF, Stockley's Drug Interactions.
+
+Pakistan brands: Glucophage=Metformin, Brufen=Ibuprofen, Panadol=Paracetamol, Flagyl=Metronidazole, Augmentin=Amoxicillin-Clavulanate, Disprin=Aspirin, Norvasc=Amlodipine, Cardace=Ramipril.
+
+Critical checks: Warfarin+Aspirin=major bleed; Metformin+eGFR<30=lactic acidosis; ACEi+K-sparing=hyperkalemia; SSRIs+Tramadol=serotonin syndrome; NSAIDs+elderly=GI bleed; Warfarin+Amoxicillin=INR rise; Codeine<12yr=contraindicated.
+
+REPLY ONLY with raw JSON. No markdown, no backticks, no explanation. Start { end }.
+
+Schema (short strings, max 25 words each field):
+{"v":"safe","sc":9,"ti":"Short verdict title","su":"One sentence summary","sum":"2 sentence plain overview of what this prescription treats","drugs":["Metformin 500mg twice daily","Aspirin 75mg once daily"],"int":{"s":"ok","f":"No dangerous combinations found."},"dose":{"s":"ok","f":"All doses are within normal range."},"ci":{"s":"ok","f":"No contraindications found."},"dup":{"s":"ok","f":"No duplicate medicines found."},"renal":{"s":"na","f":"Kidney info not provided."},"liver":{"s":"na","f":"Liver info not provided."},"preg":{"s":"na","f":"Not applicable."}}
+
+v=safe|warning|danger. s=ok|warn|err|na. Be concise.`;
+
+const SYS2=`You are RxScan pharmacist AI. Reply ONLY with raw JSON. No markdown, no backticks. Start { end }.
+
+Schema:
+{"sched":{"am":["Drug A"],"pm":[],"night":["Drug B"],"food":["Drug A"]},"se":[{"d":"Drug name","e":["effect1","effect2","effect3"]}],"advice":"2-3 simple sentences of patient advice."}
+
+Keep short. Max 3 side effects per drug. Max 5 drugs in se.`;
+
+// ── EXTRACT JSON ──
+function getJSON(raw){
+  try{return JSON.parse(raw.trim())}catch(e){}
+  const s=raw.replace(/```json|```/gi,'').trim();
+  try{return JSON.parse(s)}catch(e){}
+  const a=s.indexOf('{'),b=s.lastIndexOf('}');
+  if(a>-1&&b>a){try{return JSON.parse(s.slice(a,b+1))}catch(e){}}
+  return null;
+}
+
+// ── API CALL ──
+async function api(system,messages){
+  const r=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:900,system,messages})
+  });
+  if(!r.ok){const t=await r.text();throw new Error('API '+r.status+': '+t.slice(0,120))}
+  const d=await r.json();
+  const raw=(d.content||[]).map(c=>c.text||'').join('');
+  const p=getJSON(raw);
+  if(!p)throw new Error('Could not read AI response. Try again.');
+  return p;
+}
+
+// ── MAIN ──
+async function analyze(){
+  const isUpload=$('modeUpload').classList.contains('on');
+  if(isUpload&&!b64){showErr('Please upload a prescription photo first.');return}
+  if(!isUpload&&!$('rxText').value.trim()){showErr('Please type the prescription text first.');return}
+  hideErr();
+
+  $('report').classList.remove('on');$('report').style.display='none';
+  $('loader').classList.add('on');
+  $('analyzeBtn').disabled=true;
+
+  const ctx=getCtx();
+  const buildMsg=(prompt)=>{
+    if(isUpload) return[{type:'image',source:{type:'base64',media_type:mime,data:b64}},{type:'text',text:prompt+(ctx?' Patient: '+ctx:'')}];
+    return[{type:'text',text:prompt+'\n\nPrescription:\n'+$('rxText').value+(ctx?'\n\nPatient: '+ctx:'')}];
+  };
+
+  try{
+    const main=await api(SYS1,[{role:'user',content:buildMsg('Analyze this prescription. Return the compact JSON.')}]);
+    lastDrugs=(main.drugs||[]).join(', ')||'Unknown';
+    const detail=await api(SYS2,[{role:'user',content:[{type:'text',text:'Drugs: '+lastDrugs+(ctx?'. Patient: '+ctx:'')+'. Return schedule, side effects, advice JSON.'}]}]);
+    lastR={...main,...detail};
+    render(lastR);
+  }catch(e){
+    console.error(e);
+    showErr(e.message||'Something went wrong. Please try again.');
+  }finally{
+    $('loader').classList.remove('on');
+    $('analyzeBtn').disabled=false;
+  }
+}
+
+// ── RENDER ──
+function render(r){
+  // Verdict
+  const v=r.v||'warning';
+  $('verdictBox').className='verdict '+v;
+  $('vIcon').textContent=v==='safe'?'✅':v==='warning'?'⚠️':'🚨';
+  $('vTitle').textContent=r.ti||'Analysis Complete';
+  $('vSub').textContent=r.su||'';
+  $('vScoreN').textContent=r.sc||7;
+
+  // Drugs
+  const drugs=r.drugs||[];
+  $('drugCount').textContent=drugs.length+' medication'+(drugs.length!==1?'s':'')+' detected';
+  const dr=$('drugRow'); dr.innerHTML='';
+  drugs.forEach(d=>{
+    const parts=typeof d==='string'?d.split(/—|·/).map(s=>s.trim()):[d.name||d,d.freq||''];
+    const el=document.createElement('div'); el.className='drug-pill';
+    el.innerHTML=`<span class="dpill-dot"></span><span>${parts[0]}</span>${parts[1]?`<span class="dpill-freq">· ${parts[1]}</span>`:''}`;
+    dr.appendChild(el);
+  });
+
+  // Summary
+  $('summaryText').innerHTML=fmtText(r.sum||r.summary||'No summary available.');
+
+  // Checks
+  setCheck('Interactions','tagInteractions','textInteractions',r.int||r.interactions);
+  setCheck('Doses','tagDoses','textDoses',r.dose||r.doses);
+  setCheck('Contra','tagContra','textContra',r.ci||r.contraindications);
+
+  // Organ
+  const renal=r.renal||{s:'na',f:'Kidney info not provided.'};
+  const liver=r.liver||r.hepatic||{s:'na',f:'Liver info not provided.'};
+  const organStatus=renal.s==='err'||liver.s==='err'?'err':renal.s==='warn'||liver.s==='warn'?'warn':renal.s==='na'&&liver.s==='na'?'na':'ok';
+  setTagClass($('tagOrgan'),organStatus,{ok:'✓ No Issues',warn:'⚠ Check Needed',err:'✗ Adjust Dose',na:'Not Checked'});
+  $('textOrgan').innerHTML=fmtText(
+    (renal.f&&renal.s!=='na'?'<strong>Kidneys:</strong> '+renal.f:'')+(liver.f&&liver.s!=='na'?'\n<strong>Liver:</strong> '+liver.f:'')
+    ||(renal.f+'\n'+liver.f)
+  );
+
+  // Pregnancy
+  const preg=r.preg||r.pregnancy||{s:'na',f:'Not applicable.'};
+  setTagClass($('tagPreg'),preg.s,{ok:'✓ Safe',warn:'⚠ Caution',err:'✗ Avoid',na:'Not Applicable'});
+  $('textPreg').innerHTML=fmtText(preg.f||'Not applicable.');
+
+  // Schedule
+  const s=r.sched||r.schedule;
+  const am=s?.am||s?.morning||[];
+  const pm=s?.pm||s?.afternoon||[];
+  const night=s?.night||[];
+  const food=s?.food||s?.withFood||[];
+  const sb=$('schedBody'); sb.innerHTML='';
+  if(am.length||pm.length||night.length){
+    const grid=document.createElement('div'); grid.className='sched-grid';
+    [[am,'🌅','Morning'],[pm,'☀️','Afternoon'],[night,'🌙','Night']].forEach(([drugs,ico,lbl])=>{
+      const slot=document.createElement('div'); slot.className='slot';
+      slot.innerHTML=`<div class="slot-ico">${ico}</div><div class="slot-name">${lbl}</div><div class="slot-drugs">${drugs.length?drugs.map(d=>`<div class="slot-d">${d}</div>`).join(''):'<div class="slot-none">None</div>'}</div>`;
+      grid.appendChild(slot);
+    });
+    sb.appendChild(grid);
+    if(food.length){
+      const tip=document.createElement('div'); tip.className='food-tip';
+      tip.innerHTML='🍽️ <strong>Take with food:</strong> '+food.join(', ');
+      sb.appendChild(tip);
+    }
+  } else {
+    sb.innerHTML='<p style="font-size:14px;color:var(--text2)">Take as directed by your doctor or the prescription label.</p>';
+  }
+
+  // Side effects
+  const se=r.se||r.sideEffects||[];
+  const seb=$('seBody'); seb.innerHTML='';
+  if(se.length){
+    se.forEach(e=>{
+      const drug=e.d||e.drug||'Unknown';
+      const effects=e.e||e.effects||[];
+      const row=document.createElement('div'); row.className='se-item';
+      row.innerHTML=`<div class="se-drug-name">💊 ${drug}</div><div class="se-pills">${effects.map(ef=>`<span class="se-pill">${ef}</span>`).join('')}</div>`;
+      seb.appendChild(row);
+    });
+  } else {
+    seb.innerHTML='<div style="padding:16px 20px;font-size:14px;color:var(--text2)">No specific side effects to flag. Follow the package leaflet.</div>';
+  }
+
+  // Advice
+  $('adviceText').innerHTML=fmtText(r.advice||'Take your medications as prescribed. Do not skip doses. Contact your doctor if you feel unwell.');
+
+  $('chatMsgs').innerHTML='<div class="bubble bot">Your prescription report is ready. Ask me anything about your medicines — food interactions, missed doses, side effects, or anything else 😊</div>';
+
+  $('report').style.display='block';
+  $('report').classList.add('on');
+  setTimeout(()=>$('report').scrollIntoView({behavior:'smooth',block:'start'}),100);
+}
+
+// ── HELPERS ──
+function setCheck(key,tagId,textId,data){
+  const d=data||{s:'na',f:'No data.'};
+  const labels={ok:'✓ Clear',warn:'⚠ Caution',err:'✗ Issue Found',na:'Not Checked'};
+  setTagClass($(tagId),d.s,labels);
+  $(textId).innerHTML=fmtText(d.f||'No issues found.');
+}
+
+function setTagClass(el,s,labels){
+  el.className='rsec-tag '+(s==='ok'?'tag-ok':s==='warn'?'tag-warn':s==='err'?'tag-err':'tag-na');
+  el.textContent=labels[s]||s;
+}
+
+function fmtText(t){
+  if(!t) return '';
+  return t.split('\n').filter(Boolean).map(line=>`<p>${line.replace(/^[•\-]\s*/,'')}</p>`).join('');
+}
+
+function showErr(m){ const e=$('errMsg'); e.textContent='⚠️  '+m; e.classList.add('on') }
+function hideErr(){ $('errMsg').classList.remove('on') }
+
+// ── SHARE ──
+function buildShareText(){
+  if(!lastR) return '';
+  const v=lastR.v||'unknown';
+  const icon=v==='safe'?'✅':v==='warning'?'⚠️':'🚨';
+  const lines=[
+    `${icon} RxScan Prescription Report`,
+    `Verdict: ${lastR.ti||v}`,
+    `Safety Score: ${lastR.sc||'?'}/10`,
+    ``,
+    `Medications: ${(lastR.drugs||[]).join(', ')}`,
+    ``,
+    `Summary: ${lastR.sum||lastR.summary||''}`,
+    ``,
+    `Drug Interactions: ${lastR.int?.f||lastR.interactions?.f||''}`,
+    `Doses: ${lastR.dose?.f||lastR.doses?.f||''}`,
+    ``,
+    `Advice: ${lastR.advice||''}`,
+    ``,
+    `⚠️ This is an AI tool. Always consult your pharmacist or doctor.`,
+    `Analyzed by RxScan Pakistan — rxscan.pk`
+  ];
+  return lines.join('\n');
+}
+
+function copyReport(){
+  const txt=buildShareText();
+  navigator.clipboard.writeText(txt).then(()=>{
+    const btn=$('copyBtn');
+    btn.classList.add('copied');
+    btn.querySelector('.sbtn-ico').textContent='✅';
+    btn.childNodes[1].textContent=' Copied!';
+    setTimeout(()=>{btn.classList.remove('copied');btn.querySelector('.sbtn-ico').textContent='📋';btn.childNodes[1].textContent=' Copy Text'},2000);
+  });
+}
+
+function shareWhatsApp(){
+  const txt=buildShareText();
+  window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank');
+}
+
+function shareMail(){
+  const txt=buildShareText();
+  window.location.href='mailto:?subject=My Prescription Report — RxScan&body='+encodeURIComponent(txt);
+}
+
+// ── CHAT ──
+async function sendChat(){
+  const inp=$('chatIn'), msg=inp.value.trim();
+  if(!msg) return;
+  inp.value=''; $('chatBtn').disabled=true;
+  const msgs=$('chatMsgs');
+  const u=document.createElement('div'); u.className='bubble usr'; u.textContent=msg; msgs.appendChild(u);
+  const dots=document.createElement('div'); dots.className='typing-ind';
+  dots.innerHTML='<span></span><span></span><span></span>'; msgs.appendChild(dots);
+  msgs.scrollTop=msgs.scrollHeight;
+  const ctx=lastR?`Drugs analyzed: ${lastDrugs}. Key findings: ${lastR.int?.f||''}. Advice: ${lastR.advice||''}`:'';
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',max_tokens:300,
+        system:`You are a friendly pharmacist in Pakistan. Answer in 2-3 simple sentences. ${ctx}`,
+        messages:[{role:'user',content:msg}]
+      })
+    });
+    const d=await r.json();
+    const reply=(d.content||[]).map(c=>c.text||'').join('')||'Sorry, try again.';
+    dots.remove();
+    const b=document.createElement('div'); b.className='bubble bot'; b.textContent=reply; msgs.appendChild(b);
+  }catch{
+    dots.remove();
+    const b=document.createElement('div'); b.className='bubble bot'; b.textContent='Something went wrong. Please try again.'; msgs.appendChild(b);
+  }finally{
+    $('chatBtn').disabled=false; msgs.scrollTop=msgs.scrollHeight;
+  }
+}
+
+// ── RESET ──
+function resetAll(){
+  lastR=null; b64=null; mime=null; lastDrugs='';
+  removeImg();
+  $('rxText').value='';
+  ['age','weight','conditions','allergies'].forEach(id=>$(id).value='');
+  ['sex','kidney','liver','preg','ptype'].forEach(id=>$(id).selectedIndex=0);
+  $('report').classList.remove('on'); $('report').style.display='none';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+</script>
+</body>
+</html>
