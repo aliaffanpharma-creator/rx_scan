@@ -9,7 +9,15 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Missing input" });
     }
 
-    const prompt = system + "\n\n" + messages.map(m => m.content).join("\n");
+    const userContent = messages.map(m => {
+      if (typeof m.content === 'string') return m.content;
+      if (Array.isArray(m.content)) {
+        return m.content.map(c => c.text || '').join(' ');
+      }
+      return '';
+    }).join('\n');
+
+    const prompt = system + "\n\n" + userContent;
 
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
@@ -23,6 +31,11 @@ export default async function handler(req, res) {
     );
 
     const data = await response.json();
+
+    if (!response.ok) {
+      return res.status(500).json({ error: "Gemini error", details: JSON.stringify(data) });
+    }
+
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
 
     return res.status(200).json({
@@ -33,18 +46,3 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: "Server error", message: err.message });
   }
 }
-```
-
-Click **Commit changes**
-
----
-
-## Step 3 — Wait & Test (1 min)
-
-Vercel auto-deploys in **30–60 seconds** after commit.
-
-Then open your live link and test with:
-```
-Metformin 500mg twice daily
-Aspirin 75mg once daily
-Amlodipine 5mg once daily
