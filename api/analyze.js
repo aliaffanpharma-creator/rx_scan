@@ -4,8 +4,7 @@ module.exports = async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
   try {
     const key = process.env.GROQ_KEY;
-    if (!key) return res.status(500).json({ error: "No API key" });
-    const { system, messages } = req.body || {};
+    const key = process.env.GROQ_KEY || "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";
     if (!system || !messages) return res.status(400).json({ error: "Missing input" });
     const userContent = messages.map(m => {
       if (typeof m.content === 'string') return m.content;
