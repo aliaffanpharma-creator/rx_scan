@@ -516,6 +516,12 @@ Patient: Sara, 34F
       </div>
     </div>
 
+    <!-- DISCLAIMER CHECKBOX -->
+    <label style="font-size:13px;display:block;margin-bottom:10px;color:var(--text2)">
+      <input type="checkbox" id="agree" style="margin-right:6px"/>
+      I understand this is NOT medical advice
+    </label>
+
     <div class="err" id="errMsg"></div>
     <button class="analyze-btn" id="analyzeBtn" onclick="analyze()">Analyze Prescription</button>
   </div>
@@ -848,22 +854,27 @@ function getJSON(raw){
   return null;
 }
 
-// ── API CALL ──
-async function api(system,messages){
-  const r=await fetch('https://api.anthropic.com/v1/messages',{
-    method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:900,system,messages})
+// ── API CALL (UPDATED — uses secure backend) ──
+async function api(system, messages) {
+  const r = await fetch('/api/analyze', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ system, messages })
   });
-  if(!r.ok){const t=await r.text();throw new Error('API '+r.status+': '+t.slice(0,120))}
-  const d=await r.json();
-  const raw=(d.content||[]).map(c=>c.text||'').join('');
-  const p=getJSON(raw);
-  if(!p)throw new Error('Could not read AI response. Try again.');
-  return p;
+  if (!r.ok) {
+    const err = await r.json();
+    throw new Error(err.error || 'Server error');
+  }
+  const d = await r.json();
+  const raw = (d.content || []).map(c => c.text || '').join('');
+  const parsed = getJSON(raw);
+  if (!parsed) throw new Error('Invalid AI response');
+  return parsed;
 }
 
 // ── MAIN ──
 async function analyze(){
+  if (!$('agree').checked) { showErr('Please accept the disclaimer first.'); return; }
   const isUpload=$('modeUpload').classList.contains('on');
   if(isUpload&&!b64){showErr('Please upload a prescription photo first.');return}
   if(!isUpload&&!$('rxText').value.trim()){showErr('Please type the prescription text first.');return}
@@ -896,7 +907,6 @@ async function analyze(){
 
 // ── RENDER ──
 function render(r){
-  // Verdict
   const v=r.v||'warning';
   $('verdictBox').className='verdict '+v;
   $('vIcon').textContent=v==='safe'?'✅':v==='warning'?'⚠️':'🚨';
@@ -904,7 +914,6 @@ function render(r){
   $('vSub').textContent=r.su||'';
   $('vScoreN').textContent=r.sc||7;
 
-  // Drugs
   const drugs=r.drugs||[];
   $('drugCount').textContent=drugs.length+' medication'+(drugs.length!==1?'s':'')+' detected';
   const dr=$('drugRow'); dr.innerHTML='';
@@ -915,15 +924,12 @@ function render(r){
     dr.appendChild(el);
   });
 
-  // Summary
   $('summaryText').innerHTML=fmtText(r.sum||r.summary||'No summary available.');
 
-  // Checks
   setCheck('Interactions','tagInteractions','textInteractions',r.int||r.interactions);
   setCheck('Doses','tagDoses','textDoses',r.dose||r.doses);
   setCheck('Contra','tagContra','textContra',r.ci||r.contraindications);
 
-  // Organ
   const renal=r.renal||{s:'na',f:'Kidney info not provided.'};
   const liver=r.liver||r.hepatic||{s:'na',f:'Liver info not provided.'};
   const organStatus=renal.s==='err'||liver.s==='err'?'err':renal.s==='warn'||liver.s==='warn'?'warn':renal.s==='na'&&liver.s==='na'?'na':'ok';
@@ -933,12 +939,10 @@ function render(r){
     ||(renal.f+'\n'+liver.f)
   );
 
-  // Pregnancy
   const preg=r.preg||r.pregnancy||{s:'na',f:'Not applicable.'};
   setTagClass($('tagPreg'),preg.s,{ok:'✓ Safe',warn:'⚠ Caution',err:'✗ Avoid',na:'Not Applicable'});
   $('textPreg').innerHTML=fmtText(preg.f||'Not applicable.');
 
-  // Schedule
   const s=r.sched||r.schedule;
   const am=s?.am||s?.morning||[];
   const pm=s?.pm||s?.afternoon||[];
@@ -962,7 +966,6 @@ function render(r){
     sb.innerHTML='<p style="font-size:14px;color:var(--text2)">Take as directed by your doctor or the prescription label.</p>';
   }
 
-  // Side effects
   const se=r.se||r.sideEffects||[];
   const seb=$('seBody'); seb.innerHTML='';
   if(se.length){
@@ -977,9 +980,7 @@ function render(r){
     seb.innerHTML='<div style="padding:16px 20px;font-size:14px;color:var(--text2)">No specific side effects to flag. Follow the package leaflet.</div>';
   }
 
-  // Advice
   $('adviceText').innerHTML=fmtText(r.advice||'Take your medications as prescribed. Do not skip doses. Contact your doctor if you feel unwell.');
-
   $('chatMsgs').innerHTML='<div class="bubble bot">Your prescription report is ready. Ask me anything about your medicines — food interactions, missed doses, side effects, or anything else 😊</div>';
 
   $('report').style.display='block';
@@ -1054,7 +1055,7 @@ function shareMail(){
   window.location.href='mailto:?subject=My Prescription Report — RxScan&body='+encodeURIComponent(txt);
 }
 
-// ── CHAT ──
+// ── CHAT (UPDATED — uses secure backend) ──
 async function sendChat(){
   const inp=$('chatIn'), msg=inp.value.trim();
   if(!msg) return;
@@ -1066,10 +1067,9 @@ async function sendChat(){
   msgs.scrollTop=msgs.scrollHeight;
   const ctx=lastR?`Drugs analyzed: ${lastDrugs}. Key findings: ${lastR.int?.f||''}. Advice: ${lastR.advice||''}`:'';
   try{
-    const r=await fetch('https://api.anthropic.com/v1/messages',{
+    const r=await fetch('/api/analyze',{
       method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
-        model:'claude-sonnet-4-20250514',max_tokens:300,
         system:`You are a friendly pharmacist in Pakistan. Answer in 2-3 simple sentences. ${ctx}`,
         messages:[{role:'user',content:msg}]
       })
@@ -1093,6 +1093,7 @@ function resetAll(){
   $('rxText').value='';
   ['age','weight','conditions','allergies'].forEach(id=>$(id).value='');
   ['sex','kidney','liver','preg','ptype'].forEach(id=>$(id).selectedIndex=0);
+  $('agree').checked=false;
   $('report').classList.remove('on'); $('report').style.display='none';
   window.scrollTo({top:0,behavior:'smooth'});
 }
