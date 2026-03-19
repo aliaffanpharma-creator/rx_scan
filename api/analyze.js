@@ -1,46 +1,50 @@
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
-  }
-
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    return res.status(500).json({ error: "No API key found" });
-  }
-
+  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
+  const key = process.env.OPENROUTER_KEY;
+  if (!key) return res.status(500).json({ error: "No API key" });
   const { system, messages } = req.body || {};
-  if (!system || !messages) {
-    return res.status(400).json({ error: "Missing system or messages" });
-  }
-
+  if (!system || !messages) return res.status(400).json({ error: "Missing input" });
   const userContent = messages.map(m => {
     if (typeof m.content === 'string') return m.content;
     if (Array.isArray(m.content)) return m.content.map(c => c.text || '').join(' ');
     return '';
   }).join('\n');
-
-  const prompt = `${system}\n\n${userContent}`;
-
-  const geminiRes = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.1 }
-      })
-    }
-  );
-
-  const geminiData = await geminiRes.json();
-
-  if (!geminiRes.ok) {
-    return res.status(500).json({ error: "Gemini failed", details: geminiData });
-  }
-
-  const text = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || "";
+  const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${key}`,
+      "HTTP-Referer": "https://rxscan.vercel.app",
+      "X-Title": "RxScan"
+    },
+    body: JSON.stringify({
+      model: "mistralai/mistral-7b-instruct:free",
+      messages: [
+        { role: "system", content: system },
+        { role: "user", content: userContent }
+      ]
+    })
+  });
+  const data = await response.json();
+  if (!response.ok) return res.status(500).json({ error: "AI error", details: data });
+  const text = data.choices?.[0]?.message?.content || "";
   return res.status(200).json({ content: [{ text }] });
 }
+```
+
+3. Commit changes
+
+---
+
+**Step 4 — Force redeploy**
+1. Vercel → Deployments
+2. 3 dots on latest → Redeploy
+
+---
+
+**Step 5 — Test**
+Paste this and click Analyze:
+```
+Metformin 500mg twice daily
+Aspirin 75mg once daily
+Amlodipine 5mg once daily
